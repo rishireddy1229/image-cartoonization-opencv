@@ -4,6 +4,7 @@ import numpy as np
 from PIL import Image
 import os
 
+from src.metrics import evaluate
 from src.cartoonize import cartoonize_image
 
 # ---------------- PAGE CONFIG ----------------
@@ -47,6 +48,20 @@ label {
     color: #cbd5f5 !important;
 }
 
+/* Image captions */
+.stCaption {
+    color: #e2e8f0 !important;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Metrics text */
+.metrics {
+    color: #f1f5f9;
+    font-size: 16px;
+    margin-top: 10px;
+}
+
 /* File uploader */
 [data-testid="stFileUploader"] {
     background-color: #1e293b;
@@ -82,7 +97,7 @@ label {
 """, unsafe_allow_html=True)
 
 # ---------------- HEADER ----------------
-st.markdown("<h1> Image Cartoonizer</h1>", unsafe_allow_html=True)
+st.markdown("<h1>Image Cartoonizer</h1>", unsafe_allow_html=True)
 st.markdown('<div class="subtitle">Upload an image and convert it into a cartoon</div>', unsafe_allow_html=True)
 
 # ---------------- INPUT ----------------
@@ -102,14 +117,14 @@ if uploaded_file:
     col1, col2 = st.columns(2)
 
     with col1:
-        st.caption("Original Image")
+        st.markdown("<p style='color:#e2e8f0;'>Original Image</p>", unsafe_allow_html=True)
         st.image(image, use_container_width=True)
 
     with col2:
-        st.caption("Cartoon Output")
+        st.markdown("<p style='color:#e2e8f0;'>Cartoon Output</p>", unsafe_allow_html=True)
         output_placeholder = st.empty()
 
-    if st.button(" Cartoonize", use_container_width=True):
+    if st.button("Cartoonize", use_container_width=True):
         with st.spinner("Processing..."):
             output = cartoonize_image(img_cv, method)
 
@@ -121,12 +136,28 @@ if uploaded_file:
 
             st.success("Saved successfully!")
 
-            # Download
-            _, buffer = cv2.imencode(".jpg", output)
-            st.download_button(
-                "📥 Download Image",
-            data=cv2.imencode('.jpg', output)[1].tobytes(),
-            file_name="cartoon.jpg",
-            mime="image/jpeg"
+            # ---------------- METRICS ----------------
+            ssim_score, mse_score = evaluate(img_cv, output)
 
+            st.markdown("<h3 style='color:#ffffff;'>Evaluation Metrics</h3>", unsafe_allow_html=True)
+
+            st.markdown(
+                f"""
+                <div class="metrics">
+                    <b>SSIM:</b> {ssim_score:.4f} <br>
+                    <b>MSE:</b> {mse_score:.2f}
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+            # ---------------- DOWNLOAD ----------------
+            _, buffer = cv2.imencode(".jpg", output)
+
+            st.download_button(
+                label="Download Image",
+                data=buffer.tobytes(),
+                file_name="cartoon.jpg",
+                mime="image/jpeg",
+                use_container_width=True
             )
