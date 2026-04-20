@@ -43,7 +43,7 @@ The cartoonization pipeline consists of:
 
 ## Application Preview
 
-![App Screenshot](screenshot.png)
+![alt text](image.png)
 
 ---
 
